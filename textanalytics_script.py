@@ -5,14 +5,16 @@ project_name="PROJEKTNAME"
 input_directory = "C:/Users/Florian Gehrig/Box/02. Live Engagements/BayWa r.e. - Internal Engagement (2019)/03-Rollout/01-Rework Strategic Directives/99-Employee Feedback Survey/00-Data/2019-08-18-Rohdaten von Umfrage XXX._employee_survey (alle Teilnehmer)_WHOLE_FINAL_v6.csv"
 output_directory = "C:/Users/Florian Gehrig/Documents"
 
-variables_of_interest = ["Q7 - 1"]
+#variables_of_interest = ["Q7 - 1"]
+cols=["Kundenwünsche","Negativ-Feedback"]
+n_cols=[10,7]
 groupings=["Q3"]
-cols=["Q6"]
-n_cols=[10]
+
 font_directory = "C:/Users/Florian Gehrig/Downloads/arialbd.ttf"
 
 translation = False
 target_language = "en" # "en" for English, "de" for German...
+key_directory = "insert google project key directory"
 translation_export = False
 
 
@@ -56,6 +58,10 @@ if translation == True:
 
     if translation_export == True:
         df_translated.to_csv(output_directory+"/"+project_name+"_translated data.csv")
+
+
+
+
 
 
 # CROSSTABS -------------------------------------------------------------------
