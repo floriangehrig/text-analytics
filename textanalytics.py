@@ -19,6 +19,7 @@ import numpy as np
 from dfply import *
 from collections import Counter
 from datetime import datetime
+from google.cloud import translate
 import os
 
 
@@ -469,9 +470,8 @@ def key_term_plot(df, variables_of_interest, clust_alg="kmeans",title="XXX", cli
     text_cleaned = text_cleaner(text)
     text_cleaned_ngramed = ngram_extract(text_cleaned,min_freq=4)
 
-    #corpus =[["".join(word)] for word in text_cleaned_ngramed if len(word)>2]
+    corpus =[["".join(word)] for word in text_cleaned_ngramed if len(word)>2]
 
-    corpus = text_cleaned_ngramed
     adjectives = []
 
     for category in ["a","s","r"]:
@@ -970,3 +970,37 @@ def group_based_wordcloud(df, cols, n_cols, groupings, font_directory, scaling=1
                 print(item, var, group_word_frequencies)
             
         writer.save()
+
+
+
+def translating(key_directory, df, target_language):
+    
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = key_directory
+    
+    translate_client = translate.Client()
+    
+    df = df
+    translates = []
+    
+    for x, column in enumerate(df.columns[30:]):
+        if df[column].dtype.kind != 'O':
+            print(column,"Column not needed")
+        else:
+            to_trans = df[column].tolist()
+            for i in range(len(to_trans)):
+                if isinstance(to_trans[i], float) == True or str(to_trans[i]) in ["-99","-66","0"] or to_trans[i] in ["NaN",np.NaN] or list(translate_client.detect_language(to_trans[i]).values())[1] == "en":
+                    df[column][i]=to_trans[i]
+                    print("NT",to_trans[i])
+                else:
+                    try:
+                        translation = translate_client.translate(to_trans[i], target_language='en')
+                        df[column][i] = translation['translatedText']
+                        print("T",to_trans[i])
+                        translates.append(to_trans[i])
+                        
+                    except:
+                        df[column][i]=to_trans[i]
+                        print("NT",to_trans[i])    
+                        
+    return df, translates
+
