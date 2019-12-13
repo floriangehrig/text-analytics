@@ -973,7 +973,7 @@ def group_based_wordcloud(df, cols, n_cols, groupings, font_directory, scaling=1
 
 
 
-def translating(key_directory, df, target_language):
+def translating(key_directory, df, target_language = 'en'):
     
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = key_directory
     
@@ -993,7 +993,7 @@ def translating(key_directory, df, target_language):
                     print("NT",to_trans[i])
                 else:
                     try:
-                        translation = translate_client.translate(to_trans[i], target_language='en')
+                        translation = translate_client.translate(to_trans[i], target_language=target_language)
                         df[column][i] = translation['translatedText']
                         print("T",to_trans[i])
                         translates.append(to_trans[i])
