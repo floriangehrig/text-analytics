@@ -273,51 +273,57 @@ def ngram_extract(corpus, methods = ["Quadgram","Trigram","Bigram"], min_freq=3)
     
 
 
-def text_cleaner(text, social = False, correct = False, lemma = False):
-    
-    #text = [string for string in text if string not in ["NaN","nan",np.NaN]]
-    text=[string for string in text if isinstance(string, float) != True]
-    #text = [string for string in text if str(string).lower() not in ['-66','-99','nan']] 
-    
+def text_cleaner(text,remove_nas=False, remove_numbers=False, remove_spacings = False, replace_abbrevations = False, lemmatize = False, grammar_correct = False, remove_social = False,):
+
+    if remove_nas == True: # REMOVE ALL MISSING VALUES
+
+        text = [string for string in text if string not in ["NaN","nan",np.NaN]]
+        text = [string for string in text if str(string).lower() not in ['-66','-99','nan']]
+
+    if remove_numbers == True: ## REMOVE ALL NUMBERS
+
+        text=[string for string in text if isinstance(string, float) != True]
+        text = [regex.sub(r'[0-9]+', '', string) for string in text]
+
     #p = re.compile(r"(\b[-#'\.]\b)|[\W]")
     #text = [p.sub(lambda m: (m.group(1) if m.group(1) else " "), string) for string in text]
     
-    #text = [regex.sub(r' +', ' ', str(string)).lower() for string in text] # LOWER AND REMOVE DOUBLE SPACINGS
+    if remove_spacings == True:  # LOWER AND REMOVE DOUBLE SPACINGS
+
+        text = [regex.sub(r' +', ' ', str(string)).lower() for string in text]
     
-    #text = [regex.sub(r'[0-9]+', '', string) for string in text] # REMOVE ALL NUMBERS
+    if replace_abbrevations == True:
+
+        text = [' '.join([abbr_dict.get(i, i) for i in string.split()]) for string in text] #REPLACE ABBREVATIONS
     
-    #text = [' '.join([abbr_dict.get(i, i) for i in string.split()]) for string in text] #REPLACE ABBREVATIONS    
-    
+
     text = " ".join([string.lower() for string in text])
 
-#    if lemma == True:
-#           
-#        nlp = spacy.load("en_core_web_sm")
-#        text = nlp(text)
-#        text = [token.lemma_ for token in text if not token.is_stop]
-#        text=list(map(lambda i: i.lower(),text))
-#        
-#    if correct == True:
-#        
-#            text = [TextBlob(string).correct() for string in text] # GRAMMAR CORRECTION     
-#                             
-#    if social == True:
-#        
-#        # To remove web links(http or https) from the tweet text
-#        text = re.sub(r"http\S+", "", text) 
-#        # To remove hashtags (trend) from the tweet text
-#        text = re.sub(r"#\S+", "", text) 
-#        # To remove user tags from tweet text
-#        text = re.sub(r"@\S+", "", text)  
-#        # To remove re-tweet "RT"
-#        text = re.sub(r"RT", "", text) 
-#        # To remove digits in the tweets
-#        text = re.sub(r"\d+", "", text)
-#        # To remove new line character if any
-#        text = text.replace('\\n','')
-#    
+    if lemmatize == True:
+          
+        nlp = spacy.load("en_core_web_sm")
+        text = nlp(text)
+        text = [token.lemma_ for token in text if not token.is_stop]
+        text=list(map(lambda i: i.lower(),text))
+        
+    if grammar_correct == True: # GRAMMAR CORRECTION (WARNING - NOT TESTED YET)
+        
+            text = [TextBlob(string).correct() for string in text]
+                            
+    if remove_social == True:
+        
+        text = re.sub(r"http\S+", "", text) # To remove web links(http or https) from the tweet text
+
+        text = re.sub(r"#\S+", "", text) # To remove hashtags (trend) from the tweet text
+
+        text = re.sub(r"@\S+", "", text) # To remove user tags from tweet text
+
+        text = re.sub(r"RT", "", text) # To remove re-tweet "RT"
+
+        text = text.replace('\\n','') # To remove new line character if any
+
+
     #corpus = ' '.join([word for line in text for word in line.split()])
-    
     corpus = text.split()
     corpus = [string for string in corpus]
     
@@ -402,7 +408,7 @@ def extract_topn_from_vector(feature_names, sorted_items, topn=10):
 
 
 
-def key_term_plot(corpus, clust_alg="kmeans",title="XXX", client_name = "Text", min_count=3, scaling=2, dims=[2], state=42, as_picture = True, as_interactive=False, custom_tsne_param_grid=dict(),custom_cluster_param_grid=dict() ):
+def key_term_plot(df, variables_of_interest, clust_alg="kmeans",title="XXX", client_name = "Text", min_count=3, scaling=2, dims=[2], state=42, as_picture = True, as_interactive=False, custom_tsne_param_grid=dict(),custom_cluster_param_grid=dict() ):
     """
     Key Term Visualization in 2D/3D Space
     
@@ -453,6 +459,19 @@ def key_term_plot(corpus, clust_alg="kmeans",title="XXX", client_name = "Text", 
 
     """
 
+    text_list=[]
+
+    for i in variables_of_interest:
+                text_list.append(df[i].tolist()) # MERGE ALL DATAFRAMES
+    
+    text = [text for variable in text_list for text in variable]
+
+    text_cleaned = text_cleaner(text)
+    text_cleaned_ngramed = ngram_extract(text_cleaned,min_freq=4)
+
+    #corpus =[["".join(word)] for word in text_cleaned_ngramed if len(word)>2]
+
+    corpus = text_cleaned_ngramed
     adjectives = []
 
     for category in ["a","s","r"]:
@@ -875,8 +894,6 @@ def theme_based_wordcloud(df, cols, n_cols, groupings, font_directory, scaling=1
             #         for entity in entities:
             #             print(i,x, label, entity)
             #             print(pos_words(doc, [entity], "ADJ"))
-
-
 
 
 
